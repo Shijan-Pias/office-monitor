@@ -2,7 +2,6 @@
 
 A real-time office electrical monitoring system — a live web dashboard and a Discord bot, both backed by a single shared Node.js backend.
 
-Built for [Techathon Nationals & Rover Summit] preliminary round — "Lights, Fans, Discord: The Boss's Big Idea".
 
 ![System Architecture](diagrams/system-diagram.png)
 
@@ -82,4 +81,3 @@ See [`diagrams/hardware/README.md`](diagrams/hardware/README.md) for the pin map
 ## Notes
 
 - No database is used on purpose — device state lives in memory in `deviceStore.js` for the duration of the demo. This keeps the "single source of truth" simple and matches the assignment's suggested approach.
-- The office layout PDF mentions "18 devices" in one place; this is a documented printing mistake in the problem statement — the correct total is 15 (3 rooms × 5 devices), which is what this project implements.
