@@ -1,2 +1,24 @@
 @import "tailwindcss";
-@plugin "daisyui"
+
+@theme {
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-bg: #14181c;
+  --color-panel: #1c2128;
+  --color-panel-border: #2a3038;
+  --color-on: #f5a623;
+  --color-on-glow: #ffb84d;
+  --color-off: #4b5563;
+  --color-alert: #ef4444;
+  --color-ok: #10b981;
+  --color-text: #e5e7eb;
+  --color-text-dim: #8b949e;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}

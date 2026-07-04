@@ -1,62 +1,51 @@
-// frontend/src/components/AlertsPanel.jsx
-import React from 'react';
-import { AlertTriangle, Clock } from 'lucide-react';
+// components/AlertsPanel.jsx
 
-const AlertsPanel = ({ devices }) => {
-    // Generate alerts based on current device states
-    const generateAlerts = () => {
-        const alerts = [];
-        const currentHour = new Date().getHours();
-        
-        // Check for after-hours usage (assume office hours 9 AM - 5 PM)[cite: 1]
-        const isAfterHours = currentHour < 9 || currentHour >= 17;
-
-        devices.forEach(dev => {
-            if (dev.status === 'on' && isAfterHours) {
-                alerts.push({
-                    id: `${dev.id}-after-hours`,
-                    type: 'warning',
-                    message: `${dev.name} in ${dev.room} is ON after office hours!`,
-                    time: new Date().toLocaleTimeString()
-                });
-            }
-        });
-
-        return alerts;
-    };
-
-    const activeAlerts = generateAlerts();
-
-    return (
-        <div className="card bg-base-100 shadow-xl border-t-4 border-error">
-            <div className="card-body">
-                <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-6 h-6 text-error" />
-                    <h2 className="card-title text-xl">Active Alerts</h2>
-                </div>
-
-                {activeAlerts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-6 text-gray-400">
-                        <Clock className="w-12 h-12 mb-2 opacity-50" />
-                        <p>No active alerts right now.</p>
-                        <p className="text-sm">Everything is running smoothly.</p>
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2">
-                        {activeAlerts.map(alert => (
-                            <div key={alert.id} className="alert alert-warning shadow-sm">
-                                <AlertTriangle className="w-5 h-5 shrink-0" />
-                                <div>
-                                    <h3 className="font-bold text-sm">{alert.message}</h3>
-                                    <div className="text-xs opacity-70">{alert.time}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+const ROOM_LABELS = {
+  drawing: "Drawing Room",
+  work1: "Work Room 1",
+  work2: "Work Room 2",
 };
+
+function AlertsPanel({ alerts }) {
+  const list = alerts || [];
+
+  return (
+    <div className="rounded-xl border border-panel-border bg-panel p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-display text-sm text-text-dim uppercase tracking-wide">
+          Active Alerts
+        </span>
+        {list.length > 0 && (
+          <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-alert/15 text-alert">
+            {list.length}
+          </span>
+        )}
+      </div>
+
+      {list.length === 0 ? (
+        <div className="text-sm text-text-dim py-4 text-center">
+          No active alerts. Everything looks normal.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {list.map((alert, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-1 rounded-lg border-l-2 border-alert bg-alert/5 px-3 py-2"
+            >
+              <div className="text-sm text-text">{alert.message}</div>
+              <div className="flex justify-between text-xs text-text-dim">
+                <span>{ROOM_LABELS[alert.room] || alert.room}</span>
+                <span className="font-mono">
+                  {new Date(alert.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default AlertsPanel;

@@ -1,85 +1,105 @@
-// frontend/src/components/OfficeLayout.jsx
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Fan, Lightbulb } from 'lucide-react';
+// components/OfficeLayout.jsx
+import { motion } from "framer-motion";
 
-// সাব-কম্পোনেন্ট: প্রতিটি রুমের ভিজ্যুয়াল লেআউট
-const RoomView = ({ roomName, devices }) => {
-    const fans = devices.filter(d => d.type === 'fan');
-    const lights = devices.filter(d => d.type === 'light');
-
-    return (
-        <div className="relative border-4 border-base-300 bg-base-100 min-h-[250px] flex flex-col p-4 rounded-lg shadow-inner">
-            {/* রুমের নাম (দরজার মতো লেআউটের জন্য) */}
-            <div className="absolute top-0 left-0 bg-base-300 text-base-content text-xs px-3 py-1 rounded-br-lg font-bold uppercase tracking-wider">
-                {roomName}
-            </div>
-
-            {/* লাইট সেকশন (রুমের ওপরের দিকে) */}
-            <div className="flex justify-around mt-8">
-                {lights.map(light => (
-                    <div key={light.id} className="flex flex-col items-center gap-1">
-                        <motion.div
-                            animate={{
-                                scale: light.status === 'on' ? [1, 1.15, 1] : 1,
-                            }}
-                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                            className={`p-2 rounded-full transition-colors duration-300 ${
-                                light.status === 'on' 
-                                ? 'bg-yellow-100 shadow-[0_0_20px_rgba(250,204,21,0.6)]' 
-                                : 'bg-base-200'
-                            }`}
-                        >
-                            <Lightbulb className={`w-5 h-5 ${light.status === 'on' ? 'text-yellow-500' : 'text-gray-400'}`} />
-                        </motion.div>
-                        <span className="text-[10px] text-gray-500 font-medium">{light.name}</span>
-                    </div>
-                ))}
-            </div>
-
-            {/* ফ্যান সেকশন (রুমের মাঝখানে/নিচের দিকে) */}
-            <div className="flex justify-around mt-auto mb-2">
-                {fans.map(fan => (
-                    <div key={fan.id} className="flex flex-col items-center gap-1">
-                        <div className={`p-2 rounded-full transition-colors duration-300 ${
-                                fan.status === 'on' ? 'bg-blue-50' : 'bg-base-200'
-                            }`}>
-                            <motion.div
-                                animate={{ rotate: fan.status === 'on' ? 360 : 0 }}
-                                transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                            >
-                                <Fan className={`w-7 h-7 ${fan.status === 'on' ? 'text-blue-500' : 'text-gray-400'}`} />
-                            </motion.div>
-                        </div>
-                        <span className="text-[10px] text-gray-500 font-medium">{fan.name}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
+const ROOM_ORDER = ["drawing", "work1", "work2"];
+const ROOM_LABELS = {
+  drawing: "Drawing Room",
+  work1: "Work Room 1",
+  work2: "Work Room 2",
 };
 
-// মূল লেআউট কম্পোনেন্ট
-const OfficeLayout = ({ devices }) => {
-    const rooms = ['Drawing Room', 'Work Room 1', 'Work Room 2'];
+// একটা single fan icon — ON থাকলে ঘুরবে (framer-motion দিয়ে)
+function Fan({ isOn }) {
+  return (
+    <motion.div
+      animate={isOn ? { rotate: 360 } : { rotate: 0 }}
+      transition={
+        isOn
+          ? { repeat: Infinity, duration: 1.2, ease: "linear" }
+          : { duration: 0.3 }
+      }
+      className="w-8 h-8 flex items-center justify-center"
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7">
+        <circle cx="12" cy="12" r="1.5" fill={isOn ? "#F5A623" : "#4B5563"} />
+        {[0, 120, 240].map((angle) => (
+          <ellipse
+            key={angle}
+            cx="12"
+            cy="7"
+            rx="2.2"
+            ry="4.5"
+            fill={isOn ? "#F5A623" : "#4B5563"}
+            opacity={isOn ? 0.9 : 0.5}
+            transform={`rotate(${angle} 12 12)`}
+          />
+        ))}
+      </svg>
+    </motion.div>
+  );
+}
 
-    return (
-        <div className="card bg-base-100 shadow-xl border-t-4 border-secondary mt-6">
-            <div className="card-body">
-                <h2 className="card-title text-xl mb-4">Live Office Top-View Map</h2>
-                {/* অফিসের ফ্লোর প্ল্যান (৩টি রুমের গ্রিড) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 p-3 bg-base-300 rounded-xl">
-                    {rooms.map(room => (
-                        <RoomView
-                            key={room}
-                            roomName={room}
-                            devices={devices.filter(d => d.room === room)}
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
+// একটা single light bulb — ON থাকলে glow করবে
+function Light({ isOn }) {
+  return (
+    <div
+      className="w-5 h-5 rounded-full transition-all duration-500"
+      style={{
+        backgroundColor: isOn ? "#FFD580" : "#3a3f47",
+        boxShadow: isOn
+          ? "0 0 16px 6px rgba(245,166,35,0.55), 0 0 4px 1px rgba(255,216,128,0.9)"
+          : "none",
+      }}
+    />
+  );
+}
+
+function RoomCard({ roomKey, devices }) {
+  const fans = devices.filter((d) => d.type === "fan");
+  const lights = devices.filter((d) => d.type === "light");
+  const anyOn = devices.some((d) => d.status === "on");
+
+  return (
+    <div
+      className="flex-1 rounded-xl border p-4 flex flex-col gap-4 transition-colors duration-500"
+      style={{
+        borderColor: anyOn ? "rgba(245,166,35,0.4)" : "var(--color-panel-border)",
+        backgroundColor: anyOn ? "rgba(245,166,35,0.04)" : "var(--color-panel)",
+      }}
+    >
+      <div className="font-display text-sm text-text-dim tracking-wide uppercase">
+        {ROOM_LABELS[roomKey]}
+      </div>
+
+      <div className="flex gap-3 justify-center">
+        {fans.map((f) => (
+          <Fan key={f.id} isOn={f.status === "on"} />
+        ))}
+      </div>
+
+      <div className="flex gap-3 justify-center">
+        {lights.map((l) => (
+          <Light key={l.id} isOn={l.status === "on"} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OfficeLayout({ devices }) {
+  if (!devices) return null;
+
+  return (
+    <div className="flex gap-4">
+      {ROOM_ORDER.map((roomKey) => (
+        <RoomCard
+          key={roomKey}
+          roomKey={roomKey}
+          devices={devices.filter((d) => d.room === roomKey)}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default OfficeLayout;

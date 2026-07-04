@@ -1,32 +1,28 @@
-// frontend/src/hooks/useSocket.js
-import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+// hooks/useSocket.js
+import { useEffect, useState, useRef } from "react";
+import { io } from "socket.io-client";
 
-const SOCKET_SERVER_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-export const useSocket = () => {
-    const [socket, setSocket] = useState(null);
-    const [devices, setDevices] = useState([]);
+// backend-এর "state:update" event শুনে dashboard-এর জন্য একটা live snapshot রাখে।
+// একই backend থেকে REST API আর socket দুটোই আসছে (single source of truth)।
+function useSocket() {
+  const [snapshot, setSnapshot] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const socketRef = useRef(null);
 
-    useEffect(() => {
-        const socketInstance = io(SOCKET_SERVER_URL);
-        setSocket(socketInstance);
+  useEffect(() => {
+    const socket = io(BACKEND_URL);
+    socketRef.current = socket;
 
-        // Listen for initial device data or updates
-        socketInstance.on('device_updated', (updatedDevice) => {
-            setDevices((prevDevices) => {
-                const exists = prevDevices.find(d => d.id === updatedDevice.id);
-                if (exists) {
-                    return prevDevices.map(d => d.id === updatedDevice.id ? updatedDevice : d);
-                }
-                return [...prevDevices, updatedDevice];
-            });
-        });
+    socket.on("connect", () => setConnected(true));
+    socket.on("disconnect", () => setConnected(false));
+    socket.on("state:update", (data) => setSnapshot(data));
 
-        return () => {
-            socketInstance.disconnect();
-        };
-    }, []);
+    return () => socket.disconnect();
+  }, []);
 
-    return { socket, devices, setDevices };
-};
+  return { snapshot, connected };
+}
+
+export { useSocket, BACKEND_URL };

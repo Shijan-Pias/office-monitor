@@ -16,6 +16,7 @@ import {
   getWattByRoom,
   getEstimatedKwhToday,
 } from "../data/deviceStore.js";
+import { getActiveAlerts } from "../alerts/alertEngine.js";
 
 // প্রতি tick-এ dashboard-কে পাঠানোর জন্য একটা snapshot বানানো।
 // এটাকে আলাদা ফাংশনে রাখলাম কারণ REST API আর Discord bot-ও
@@ -26,6 +27,7 @@ function buildSnapshot() {
     totalWatt: getCurrentTotalWatt(),
     wattByRoom: getWattByRoom(),
     estimatedKwhToday: Number(getEstimatedKwhToday().toFixed(2)),
+    alerts: getActiveAlerts(),
     timestamp: new Date().toISOString(),
   };
 }

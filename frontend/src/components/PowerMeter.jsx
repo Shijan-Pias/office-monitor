@@ -1,48 +1,55 @@
-// frontend/src/components/PowerMeter.jsx
-import React from 'react';
-import { Zap } from 'lucide-react';
+// components/PowerMeter.jsx
 
-const PowerMeter = ({ devices }) => {
-    // Calculate total power
-    const totalPower = devices.reduce((sum, dev) => 
-        sum + (dev.status === 'on' ? dev.powerDraw : 0), 0
-    );
-
-    // Calculate room-wise power
-    const roomPower = devices.reduce((acc, dev) => {
-        if (!acc[dev.room]) acc[dev.room] = 0;
-        if (dev.status === 'on') {
-            acc[dev.room] += dev.powerDraw;
-        }
-        return acc;
-    }, {});
-
-    return (
-        <div className="card bg-base-100 shadow-xl border-t-4 border-accent">
-            <div className="card-body">
-                <div className="flex items-center gap-2 mb-4">
-                    <Zap className="w-6 h-6 text-accent" />
-                    <h2 className="card-title text-xl">Power Consumption</h2>
-                </div>
-                
-                <div className="flex items-end gap-2 mb-6">
-                    <span className="text-5xl font-black text-primary">{totalPower}</span>
-                    <span className="text-xl font-semibold text-gray-500 mb-1">Watts</span>
-                </div>
-
-                <div className="divider">Room Breakdown</div>
-
-                <div className="flex flex-col gap-3">
-                    {Object.entries(roomPower).map(([room, power]) => (
-                        <div key={room} className="flex justify-between items-center">
-                            <span className="font-medium text-gray-700">{room}</span>
-                            <span className="badge badge-neutral">{power} W</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+const ROOM_LABELS = {
+  drawing: "Drawing Room",
+  work1: "Work Room 1",
+  work2: "Work Room 2",
 };
+
+function PowerMeter({ totalWatt, wattByRoom, estimatedKwhToday }) {
+  // সঠিক max: 6 fans * 60W + 9 lights * 15W = 495W (সব ডিভাইস একসাথে ON)
+  const MAX_WATT = 495;
+  const percent = Math.min(100, Math.round((totalWatt / MAX_WATT) * 100));
+
+  return (
+    <div className="rounded-xl border border-panel-border bg-panel p-5 flex flex-col gap-4">
+      <div className="font-display text-sm text-text-dim uppercase tracking-wide">
+        Live Power Consumption
+      </div>
+
+      <div className="flex items-end gap-2">
+        <span className="font-mono text-4xl font-semibold text-on">
+          {totalWatt}
+        </span>
+        <span className="font-mono text-lg text-text-dim mb-1">W</span>
+      </div>
+
+      {/* Gauge bar */}
+      <div className="w-full h-2 rounded-full bg-off/30 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: `${percent}%`,
+            backgroundColor: percent > 75 ? "#EF4444" : "#F5A623",
+          }}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2 mt-1">
+        {Object.entries(wattByRoom || {}).map(([room, watt]) => (
+          <div key={room} className="flex justify-between text-sm">
+            <span className="text-text-dim">{ROOM_LABELS[room]}</span>
+            <span className="font-mono text-text">{watt}W</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-3 border-t border-panel-border flex justify-between items-center">
+        <span className="text-sm text-text-dim">Estimated today</span>
+        <span className="font-mono text-lg text-ok">{estimatedKwhToday} kWh</span>
+      </div>
+    </div>
+  );
+}
 
 export default PowerMeter;
